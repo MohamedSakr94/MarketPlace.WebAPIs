@@ -13,11 +13,10 @@ namespace MarketPlace.DAL
         [ForeignKey("Product")]
         public int Product_Id { get; set; }
         public int Quantity { get; set; }
-        public decimal Price { get; set; }
 
         #region Nav Properties
-        public User User { get; set; } = null!;
-        public Products Product { get; set; } = null!;
+        public User? User { get; set; }
+        public Products? Product { get; set; }
         #endregion
     }
 }

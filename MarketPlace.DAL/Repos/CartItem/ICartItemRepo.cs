@@ -2,6 +2,7 @@
 {
     public interface ICartItemRepo : IGenericRepo<CartItem>
     {
-        CartItem? GetByproductId(int id);
+        CartItem? GetByIdWithDetails(int id);
+        CartItem? CheckCartItem(string User_id, int Product_id);
     }
 }

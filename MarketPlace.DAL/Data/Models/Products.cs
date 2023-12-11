@@ -15,7 +15,7 @@ namespace MarketPlace.DAL
         #region Nav.Properties
         public ICollection<Products_Categories> Products_Categories { get; set; } = new HashSet<Products_Categories>();
         public ICollection<CartItem> CartItems { get; set; } = new HashSet<CartItem>();
-        //public ICollection<Categories> Categories { get; set; } = new HashSet<Categories>();
+        /*public ICollection<Categories> Categories { get; set; } = new HashSet<Categories>();*/
         #endregion
     }
 }

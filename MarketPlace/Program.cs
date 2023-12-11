@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,18 +31,13 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services
 .AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = "XYZ";
-    options.DefaultAuthenticateScheme = "XYZ";
+    options.DefaultAuthenticateScheme = "JWT";
 })
-.AddJwtBearer("XYZ", options =>
+.AddJwtBearer("JWT", options =>
 {
-    string secretKey = builder.Configuration.GetValue<string>("Secretkey")!;
-    var keyInBytes = Encoding.ASCII.GetBytes(secretKey);
-    var key = new SymmetricSecurityKey(keyInBytes);
-
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        IssuerSigningKey = key,
+        IssuerSigningKey = Helpers.SecretKeyBuilder(builder.Configuration),
         ValidateIssuer = false,
         ValidateAudience = false,
     };
@@ -80,11 +74,24 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductsManager, ProductsManager>();
 builder.Services.AddScoped<ICategoriesManager, CategoriesManager>();
 builder.Services.AddScoped<IProducts_CategoriesManager, Products_CategoriesManager>();
-//builder.Services.AddScoped<IUserManager, UserManager>();
+builder.Services.AddScoped<IUserManager, UserManager>();
 builder.Services.AddScoped<ICartItemsManager, CartItemsManager>();
 #endregion
 
+#region CORS
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+#endregion
 
 
 var app = builder.Build();
@@ -97,6 +104,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -2,8 +2,11 @@
 {
     public interface ICartItemsManager
     {
-        //void AddToCart(int id);
-        List<CategoriesReadDTO> GetAll();
-        bool Delete(int id);
+        ReadCartItemsDTO AddCartItem(ItemAddToCartDTO itemAdded);
+        ReadCartItemsDTO GetById(int id);
+        ReadCartItemsWithDetailsDTO GetByIdWithDetails(int id);
+        bool DeleteById(int id);
+        bool Delete(DeleteItemFromCartDTO itemcart);
+
     }
 }

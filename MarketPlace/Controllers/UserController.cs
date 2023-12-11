@@ -1,11 +1,8 @@
 ﻿using MarketPlace.BL;
-using MarketPlace.DAL;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text;
 
 namespace MarketPlace.Controllers
 {
@@ -13,10 +10,10 @@ namespace MarketPlace.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserManager<User> userManager;
+        private readonly IUserManager userManager;
         private readonly IConfiguration configuration;
 
-        public UserController(IConfiguration configuration, UserManager<User> userManager)
+        public UserController(IConfiguration configuration, IUserManager userManager)
         {
             this.configuration = configuration;
             this.userManager = userManager;
@@ -25,69 +22,50 @@ namespace MarketPlace.Controllers
         #region login
         [HttpPost]
         [Route("Login")]
-        public async Task<ActionResult<TokenDTO>> Login(LoginDTO credentials)
+        public ActionResult<LoginResponseDTO> Login(LoginDTO credentials)
         {
-            #region Verification
-            User? user = await userManager.FindByNameAsync(credentials.UserName);
+            UserReadDetailsDTO? user = userManager.GetByEmailAndPassword(credentials);
             if (user is null)
             {
                 return Unauthorized();
             }
 
-            bool isPasswordCorrect = await userManager.CheckPasswordAsync(user, credentials.Password);
-            if (!isPasswordCorrect)
+            LoginResponseDTO loginResponse = new()
             {
-                return Unauthorized();
-            }
-            #endregion
-
-            #region GenerateToken
-
-            var claimsList = await userManager.GetClaimsAsync(user);
-            var secretKey = configuration.GetValue<string>("SecretKey")!;
-            var keyInBytes = Encoding.ASCII.GetBytes(secretKey);
-            var key = new SymmetricSecurityKey(keyInBytes);
-
-            var algorithm = SecurityAlgorithms.HmacSha256Signature;
-
-            var signingCredentials = new SigningCredentials(key, algorithm);
-
-            var token = new JwtSecurityToken(
-                claims: claimsList,
-                signingCredentials: signingCredentials,
-                expires: DateTime.Now.AddMinutes(10));
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            return new TokenDTO
-            {
-                Token = tokenHandler.WriteToken(token)
+                UserReadDetails = user,
+                Token = Helpers.GenerateJWT_Token(configuration, user)
             };
-            #endregion
+            return loginResponse;
         }
         #endregion
 
         #region Register
         [HttpPost]
         [Route("Register")]
-        public async Task<ActionResult> Register(RegisterDTO registerDto)
+        public ActionResult<UserReadDTO> Register(RegisterDTO registerDto)
         {
-            var user = new User
+            UserReadDTO user = userManager.GetByEmail(registerDto.Email);
+            if (user == null)
             {
-                UserName = registerDto.UserName,
-                Email = registerDto.Email,
-            };
-            var creationResult = await userManager.CreateAsync(user, registerDto.Password);
-            if (!creationResult.Succeeded)
-            {
-                return BadRequest(creationResult.Errors);
+                return userManager.Add(registerDto);
             }
-            var claimsList = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-            };
-            await userManager.AddClaimsAsync(user, claimsList);
+            else return StatusCode(409);
+        }
 
-            return NoContent();
+        [HttpGet]
+        [Route("{id}")]
+        [Authorize(AuthenticationSchemes = "JWT")]
+        public ActionResult<UserReadDetailsDTO> GetById([FromHeader(Name = "Authorization")][Required] string Authorization, string id)
+        {
+            if (id == null) return BadRequest();
+            if (User.FindFirstValue(ClaimTypes.NameIdentifier) != id) return StatusCode(403);
+
+            UserReadDetailsDTO? user = userManager.GetByIdWithDetails(id);
+
+            if (user == null) return NotFound();
+
+            return user;
+
         }
 
         #endregion

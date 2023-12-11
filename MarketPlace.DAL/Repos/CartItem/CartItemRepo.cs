@@ -11,11 +11,17 @@ namespace MarketPlace.DAL
             this.options = options;
         }
 
-        public CartItem? GetByproductId(int id)
+        public CartItem? GetByIdWithDetails(int id)
         {
             return options.Set<CartItem>()
-                .Include(p => p.Product)
-                .FirstOrDefault(c => c.Product.Id == id);
+                .Include(c => c.Product)
+                .Include(c => c.User)
+                .FirstOrDefault(c => c.Id == id);
+        }
+        public CartItem? CheckCartItem(string User_id, int Product_id)
+        {
+            return options.Set<CartItem>().FirstOrDefault(c => c.User_Id == User_id && c.Product_Id == Product_id);
+
         }
     }
 }

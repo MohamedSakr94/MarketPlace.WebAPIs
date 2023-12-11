@@ -10,6 +10,7 @@ namespace MarketPlace.DAL
         //public string Email { get; set; } = string.Empty;
         //public string Password { get; set; } = string.Empty;
 
+
         #region Nav Properties
         public ICollection<CartItem> CartItems { get; set; } = new HashSet<CartItem>();
         #endregion

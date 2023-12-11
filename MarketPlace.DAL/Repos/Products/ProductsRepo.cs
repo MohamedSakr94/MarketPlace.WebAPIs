@@ -45,8 +45,7 @@ namespace MarketPlace.DAL
         }
 
 
-
-        #region unused code
+        //#region unused code
         //public Products? GetByIdWithDetails(int id)
         //{
         //    return options.Set<Products>()
@@ -54,6 +53,6 @@ namespace MarketPlace.DAL
         //        .AsNoTracking()
         //        .FirstOrDefault(p => p.Id == id);
         //}
-        #endregion
+        //#endregion
     }
 }
